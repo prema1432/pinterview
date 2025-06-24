@@ -5,6 +5,7 @@ import { AutoAnswer } from "./auto-answer";
 import { QuestionGenerator } from "./question-generator";
 import { ScreenAnalyzer } from "./screen-analyzer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { InstallPwaButton } from "./install-pwa-button";
 
 export default function InterviewAce() {
   return (
@@ -16,7 +17,10 @@ export default function InterviewAce() {
             InterviewAce
           </h1>
         </div>
-        <p className="hidden text-sm text-muted-foreground md:block">Your AI co-pilot for job interviews.</p>
+        <div className="flex items-center gap-4">
+          <p className="hidden text-sm text-muted-foreground md:block">Your AI co-pilot for job interviews.</p>
+          <InstallPwaButton />
+        </div>
       </header>
       <main className="flex-1 p-4 md:p-8">
         <Tabs defaultValue="copilot" className="w-full max-w-screen-xl mx-auto">
