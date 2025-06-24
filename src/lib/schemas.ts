@@ -22,6 +22,7 @@ export const CopilotInputSchema = z.object({
 
 export type CopilotInput = z.infer<typeof CopilotInputSchema>;
 
+<<<<<<< HEAD
 export const ResumeSchema = z.object({
   id: z.string(),
   name: z.string(),
@@ -33,4 +34,9 @@ export type Resume = z.infer<typeof ResumeSchema>;
 export const resumeOptimizerSchema = z.object({
   resumeContent: z.string().min(1, { message: 'Please select a resume.' }),
   jobDescription: z.string().min(50, { message: 'Job description must be at least 50 characters.' }),
+=======
+export const resumeOptimizerSchema = z.object({
+  resumeContent: z.string().min(1, { message: 'A resume must be selected or its content provided.' }),
+  jobDescription: z.string().min(20, { message: 'Job description must be at least 20 characters.' }),
+>>>>>>> 80d1fa48581b116983731692f852547adcf46921
 });

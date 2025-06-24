@@ -5,7 +5,6 @@ import { Toaster } from "@/components/ui/toaster";
 export const metadata: Metadata = {
   title: 'InterviewAce',
   description: 'Your AI co-pilot for job interviews.',
-  manifest: '/manifest.json',
 };
 
 export const viewport: Viewport = {

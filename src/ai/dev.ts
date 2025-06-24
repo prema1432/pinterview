@@ -7,4 +7,8 @@ import '@/ai/flows/auto-answer-display.ts';
 import '@/ai/flows/interview-question-generator.ts';
 import '@/ai/flows/screen-question-extractor.ts';
 import '@/ai/flows/text-to-speech.ts';
+<<<<<<< HEAD
 import '@/ai/flows/resume-optimizer-flow.ts';
+=======
+import '@/ai/flows/resume-optimizer.ts';
+>>>>>>> 80d1fa48581b116983731692f852547adcf46921
