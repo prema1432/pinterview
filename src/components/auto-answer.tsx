@@ -17,6 +17,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 type Message = {
     id: number;
@@ -46,6 +48,7 @@ export function AutoAnswer() {
     const recognitionRef = useRef<any>(null);
     const audioRef = useRef<HTMLAudioElement>(null);
     const manualStopRef = useRef(false);
+    const speechTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     const [isManageResumesOpen, setIsManageResumesOpen] = useState(false);
     const [newResumeName, setNewResumeName] = useState('');
@@ -91,11 +94,14 @@ export function AutoAnswer() {
     }, [messages]);
 
     const stopListening = useCallback(() => {
-        if (recognitionRef.current && isListening) {
+        if (recognitionRef.current) {
             manualStopRef.current = true;
             recognitionRef.current.stop();
+            if (speechTimeoutRef.current) {
+                clearTimeout(speechTimeoutRef.current);
+            }
         }
-    }, [isListening]);
+    }, []);
     
     const handleSubmit = useCallback(async (e?: React.FormEvent<HTMLFormElement>, questionOverride?: string) => {
         e?.preventDefault();
@@ -162,19 +168,50 @@ export function AutoAnswer() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (SpeechRecognition) {
             recognitionRef.current = new SpeechRecognition();
-            recognitionRef.current.continuous = false;
+            recognitionRef.current.continuous = true;
             recognitionRef.current.interimResults = false;
             recognitionRef.current.lang = 'en-US';
 
+            let finalTranscript = '';
+
+            recognitionRef.current.onstart = () => {
+                finalTranscript = '';
+            };
+
             recognitionRef.current.onresult = (event: any) => {
-                const transcript = event.results[0][0].transcript;
-                setQuestion(transcript);
-                handleSubmit(undefined, transcript);
+                let transcriptPart = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        transcriptPart += event.results[i][0].transcript + ' ';
+                    }
+                }
+
+                if (transcriptPart) {
+                    finalTranscript += transcriptPart;
+                    setQuestion(finalTranscript);
+
+                    if (speechTimeoutRef.current) {
+                        clearTimeout(speechTimeoutRef.current);
+                    }
+
+                    speechTimeoutRef.current = setTimeout(() => {
+                        const transcriptToSubmit = finalTranscript.trim();
+                        if (transcriptToSubmit) {
+                            handleSubmit(undefined, transcriptToSubmit);
+                            recognitionRef.current.stop();
+                        }
+                    }, 3000);
+                }
             };
 
             recognitionRef.current.onerror = (event: any) => {
                 console.error("Speech recognition error", event.error);
-                if (event.error !== 'no-speech') {
+                if (event.error === 'no-speech') {
+                    const transcriptToSubmit = finalTranscript.trim();
+                    if (transcriptToSubmit) {
+                        handleSubmit(undefined, transcriptToSubmit);
+                    }
+                } else if (event.error !== 'aborted') {
                     toast({
                         title: "Voice Error",
                         description: `Speech recognition error: ${event.error}`,
@@ -186,6 +223,9 @@ export function AutoAnswer() {
 
             recognitionRef.current.onend = () => {
                 setIsListening(false);
+                if (speechTimeoutRef.current) {
+                    clearTimeout(speechTimeoutRef.current);
+                }
                 if (autoListen && !manualStopRef.current && !isLoading) {
                     startListening();
                 }
@@ -387,14 +427,26 @@ export function AutoAnswer() {
                             <div className="mt-1 flex-shrink-0">
                                 {message.role === 'assistant' ? <Bot className="w-6 h-6 text-accent" /> : <User className="w-6 h-6" />}
                             </div>
-                            <div className={`p-3 rounded-lg max-w-xl text-sm whitespace-pre-wrap ${message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                            <div className={`p-3 rounded-lg max-w-xl text-sm ${message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
                                 {isLoading && message.role === 'assistant' && !message.content ? (
                                     <div className="flex items-center gap-2 text-muted-foreground">
                                         <Loader2 className="w-4 h-4 animate-spin" />
                                         <span>Thinking...</span>
                                     </div>
-                                ) : message.content }
-                                {isLoading && message.role === 'assistant' && index === messages.length - 1 && message.content ? <span className="inline-block w-2 h-4 ml-1 translate-y-1 bg-foreground animate-pulse" /> : null}
+                                ) : message.role === 'assistant' ? (
+                                    <ReactMarkdown
+                                        remarkPlugins={[remarkGfm]}
+                                        className="prose prose-sm dark:prose-invert max-w-none"
+                                        components={{
+                                            pre: ({node, ...props}) => <pre {...props} className="bg-background/50 p-2 rounded-md" />,
+                                            code: ({node, ...props}) => <code {...props} className="font-code px-1 py-0.5 rounded-sm bg-background/50" />,
+                                        }}
+                                    >
+                                        {message.content + (isLoading && index === messages.length - 1 && message.content ? '▋' : '')}
+                                    </ReactMarkdown>
+                                ) : (
+                                    <div className="whitespace-pre-wrap">{message.content}</div>
+                                )}
                             </div>
                             {message.role === 'assistant' && message.content && (
                                 <Button size="icon" variant="ghost" className="flex-shrink-0" onClick={() => handlePlayAudio(message.id, message.content)} disabled={isSpeaking !== null && isSpeaking !== message.id}>
