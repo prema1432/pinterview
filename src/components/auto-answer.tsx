@@ -42,11 +42,7 @@ export function AutoAnswer() {
     const recognitionRef = useRef<any>(null);
     const audioRef = useRef<HTMLAudioElement>(null);
     const manualStopRef = useRef(false);
-<<<<<<< HEAD
     const listenTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-=======
-    const speechTimeoutRef = useRef<NodeJS.Timeout | null>(null);
->>>>>>> 80d1fa48581b116983731692f852547adcf46921
 
     const [isManageResumesOpen, setIsManageResumesOpen] = useState(false);
     const [newResumeName, setNewResumeName] = useState('');
@@ -92,22 +88,15 @@ export function AutoAnswer() {
     }, [messages]);
 
     const stopListening = useCallback(() => {
-<<<<<<< HEAD
         if (listenTimeoutRef.current) {
             clearTimeout(listenTimeoutRef.current);
             listenTimeoutRef.current = null;
         }
         if (recognitionRef.current && isListening) {
-=======
-        if (recognitionRef.current) {
->>>>>>> 80d1fa48581b116983731692f852547adcf46921
             manualStopRef.current = true;
             recognitionRef.current.stop();
-            if (speechTimeoutRef.current) {
-                clearTimeout(speechTimeoutRef.current);
-            }
         }
-    }, []);
+    }, [isListening]);
     
     const handleSubmit = useCallback(async (e?: React.FormEvent<HTMLFormElement>, questionOverride?: string) => {
         e?.preventDefault();
@@ -174,17 +163,10 @@ export function AutoAnswer() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (SpeechRecognition) {
             recognitionRef.current = new SpeechRecognition();
-<<<<<<< HEAD
             recognitionRef.current.continuous = true; // Keep listening
             recognitionRef.current.interimResults = true; // Get results as they come
-=======
-            recognitionRef.current.continuous = true;
-            recognitionRef.current.interimResults = false;
->>>>>>> 80d1fa48581b116983731692f852547adcf46921
             recognitionRef.current.lang = 'en-US';
             
-            let finalTranscript = '';
-
             let finalTranscript = '';
 
             recognitionRef.current.onstart = () => {
@@ -192,7 +174,6 @@ export function AutoAnswer() {
             };
 
             recognitionRef.current.onresult = (event: any) => {
-<<<<<<< HEAD
                 if (listenTimeoutRef.current) {
                     clearTimeout(listenTimeoutRef.current);
                 }
@@ -215,45 +196,11 @@ export function AutoAnswer() {
                         handleSubmit(undefined, currentTranscript);
                     }
                 }, 3000);
-=======
-                let transcriptPart = '';
-                for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    if (event.results[i].isFinal) {
-                        transcriptPart += event.results[i][0].transcript + ' ';
-                    }
-                }
-
-                if (transcriptPart) {
-                    finalTranscript += transcriptPart;
-                    setQuestion(finalTranscript);
-
-                    if (speechTimeoutRef.current) {
-                        clearTimeout(speechTimeoutRef.current);
-                    }
-
-                    speechTimeoutRef.current = setTimeout(() => {
-                        const transcriptToSubmit = finalTranscript.trim();
-                        if (transcriptToSubmit) {
-                            handleSubmit(undefined, transcriptToSubmit);
-                            recognitionRef.current.stop();
-                        }
-                    }, 3000);
-                }
->>>>>>> 80d1fa48581b116983731692f852547adcf46921
             };
 
             recognitionRef.current.onerror = (event: any) => {
                 console.error("Speech recognition error", event.error);
-<<<<<<< HEAD
                 if (event.error !== 'no-speech' && event.error !== 'aborted') {
-=======
-                if (event.error === 'no-speech') {
-                    const transcriptToSubmit = finalTranscript.trim();
-                    if (transcriptToSubmit) {
-                        handleSubmit(undefined, transcriptToSubmit);
-                    }
-                } else if (event.error !== 'aborted') {
->>>>>>> 80d1fa48581b116983731692f852547adcf46921
                     toast({
                         title: "Voice Error",
                         description: `Speech recognition error: ${event.error}`,
@@ -265,13 +212,7 @@ export function AutoAnswer() {
 
             recognitionRef.current.onend = () => {
                 setIsListening(false);
-<<<<<<< HEAD
                 finalTranscript = '';
-=======
-                if (speechTimeoutRef.current) {
-                    clearTimeout(speechTimeoutRef.current);
-                }
->>>>>>> 80d1fa48581b116983731692f852547adcf46921
                 if (autoListen && !manualStopRef.current && !isLoading) {
                     startListening();
                 }
@@ -479,12 +420,6 @@ export function AutoAnswer() {
                                         <Loader2 className="w-4 h-4 animate-spin" />
                                         <span>Thinking...</span>
                                     </div>
-<<<<<<< HEAD
-                                ) : (
-                                    <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: message.content.replace(/```(python|)\n/g, '<pre><code class="language-python">').replace(/```/g, '</code></pre>') || '' }}/>
-                                 )}
-                                {isLoading && message.role === 'assistant' && index === messages.length - 1 && message.content ? <span className="inline-block w-2 h-4 ml-1 translate-y-1 bg-foreground animate-pulse" /> : null}
-=======
                                 ) : message.role === 'assistant' ? (
                                     <ReactMarkdown
                                         remarkPlugins={[remarkGfm]}
@@ -499,7 +434,6 @@ export function AutoAnswer() {
                                 ) : (
                                     <div className="whitespace-pre-wrap">{message.content}</div>
                                 )}
->>>>>>> 80d1fa48581b116983731692f852547adcf46921
                             </div>
                             {message.role === 'assistant' && message.content && (
                                 <Button size="icon" variant="ghost" className="flex-shrink-0" onClick={() => handlePlayAudio(message.id, message.content)} disabled={isSpeaking !== null && isSpeaking !== message.id}>

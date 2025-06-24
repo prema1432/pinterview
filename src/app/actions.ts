@@ -5,13 +5,8 @@ import { streamAnswer } from '@/ai/flows/auto-answer-display';
 import { generateInterviewQuestions, type InterviewQuestionGeneratorInput, type InterviewQuestionGeneratorOutput } from '@/ai/flows/interview-question-generator';
 import { extractQuestionFromScreen, type ScreenQuestionExtractorInput, type ScreenQuestionExtractorOutput } from '@/ai/flows/screen-question-extractor';
 import { generateSpeech, type TextToSpeechOutput } from '@/ai/flows/text-to-speech';
-<<<<<<< HEAD
 import { optimizeResume, type ResumeOptimizerInput, type ResumeOptimizerOutput } from '@/ai/flows/resume-optimizer-flow';
 import { questionsSchema, screenExtractorSchema, CopilotInputSchema, resumeOptimizerSchema, type CopilotInput } from '@/lib/schemas';
-=======
-import { optimizeResume, type ResumeOptimizerInput, type ResumeOptimizerOutput } from '@/ai/flows/resume-optimizer';
-import { questionsSchema, screenExtractorSchema, CopilotInputSchema, type CopilotInput, resumeOptimizerSchema } from '@/lib/schemas';
->>>>>>> 80d1fa48581b116983731692f852547adcf46921
 
 
 export async function getStreamingAnswer(values: CopilotInput) {
@@ -68,12 +63,8 @@ export async function getSpokenAnswer(text: string): Promise<TextToSpeechOutput>
 export async function getOptimizedResume(values: ResumeOptimizerInput): Promise<ResumeOptimizerOutput> {
     const validatedInput = resumeOptimizerSchema.safeParse(values);
     if (!validatedInput.success) {
-<<<<<<< HEAD
-        throw new Error('Invalid input for resume optimizer.');
-=======
         const errorMessage = validatedInput.error.format()._errors.join(' ');
-        throw new Error(errorMessage || 'Invalid input.');
->>>>>>> 80d1fa48581b116983731692f852547adcf46921
+        throw new Error(errorMessage || 'Invalid input for resume optimizer.');
     }
     return await optimizeResume(validatedInput.data);
 }
