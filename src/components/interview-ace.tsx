@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -31,16 +32,11 @@ export default function InterviewAce() {
   const activeComponent = navItems.find(item => item.id === activeView)?.component;
 
   return (
-    <SidebarProvider defaultOpen={false}>
+    <SidebarProvider defaultOpen={true}>
       <div className="flex flex-col min-h-screen bg-background text-foreground">
         <header className="sticky top-0 z-10 flex items-center justify-between p-4 bg-background/80 backdrop-blur-sm border-b">
           <div className="flex items-center gap-3">
-            <div className="md:hidden">
-              <SidebarTrigger />
-            </div>
-            <div className="hidden md:block">
-              <SidebarTrigger />
-            </div>
+            <SidebarTrigger />
             <Bot className="w-8 h-8 text-primary" />
             <h1 className="text-2xl font-bold font-headline text-primary">
               InterviewAce
