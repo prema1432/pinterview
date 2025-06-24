@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Bot, User, Sparkles, ClipboardPaste, Send, Loader2, Mic, Volume2, Trash2, Info } from 'lucide-react';
-import type { CopilotInput } from '@/lib/schemas';
+import type { CopilotInput, Resume } from '@/lib/schemas';
 import { readStreamableValue } from 'ai/rsc';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -23,12 +23,6 @@ type Message = {
     role: 'user' | 'assistant';
     content: string;
     audioUrl?: string;
-};
-
-type Resume = {
-    id: string;
-    name: string;
-    content: string;
 };
 
 export function AutoAnswer() {
@@ -46,6 +40,7 @@ export function AutoAnswer() {
     const recognitionRef = useRef<any>(null);
     const audioRef = useRef<HTMLAudioElement>(null);
     const manualStopRef = useRef(false);
+    const listenTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     const [isManageResumesOpen, setIsManageResumesOpen] = useState(false);
     const [newResumeName, setNewResumeName] = useState('');
@@ -91,6 +86,10 @@ export function AutoAnswer() {
     }, [messages]);
 
     const stopListening = useCallback(() => {
+        if (listenTimeoutRef.current) {
+            clearTimeout(listenTimeoutRef.current);
+            listenTimeoutRef.current = null;
+        }
         if (recognitionRef.current && isListening) {
             manualStopRef.current = true;
             recognitionRef.current.stop();
@@ -162,19 +161,40 @@ export function AutoAnswer() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (SpeechRecognition) {
             recognitionRef.current = new SpeechRecognition();
-            recognitionRef.current.continuous = false;
-            recognitionRef.current.interimResults = false;
+            recognitionRef.current.continuous = true; // Keep listening
+            recognitionRef.current.interimResults = true; // Get results as they come
             recognitionRef.current.lang = 'en-US';
+            
+            let finalTranscript = '';
 
             recognitionRef.current.onresult = (event: any) => {
-                const transcript = event.results[0][0].transcript;
-                setQuestion(transcript);
-                handleSubmit(undefined, transcript);
+                if (listenTimeoutRef.current) {
+                    clearTimeout(listenTimeoutRef.current);
+                }
+                
+                let interimTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        finalTranscript += event.results[i][0].transcript;
+                    } else {
+                        interimTranscript += event.results[i][0].transcript;
+                    }
+                }
+                setQuestion(finalTranscript + interimTranscript);
+                
+                // Set a timeout to submit if the user pauses for 3 seconds
+                listenTimeoutRef.current = setTimeout(() => {
+                    const currentTranscript = (finalTranscript + interimTranscript).trim();
+                    if (currentTranscript) {
+                        recognitionRef.current.stop();
+                        handleSubmit(undefined, currentTranscript);
+                    }
+                }, 3000);
             };
 
             recognitionRef.current.onerror = (event: any) => {
                 console.error("Speech recognition error", event.error);
-                if (event.error !== 'no-speech') {
+                if (event.error !== 'no-speech' && event.error !== 'aborted') {
                     toast({
                         title: "Voice Error",
                         description: `Speech recognition error: ${event.error}`,
@@ -186,6 +206,7 @@ export function AutoAnswer() {
 
             recognitionRef.current.onend = () => {
                 setIsListening(false);
+                finalTranscript = '';
                 if (autoListen && !manualStopRef.current && !isLoading) {
                     startListening();
                 }
@@ -387,13 +408,15 @@ export function AutoAnswer() {
                             <div className="mt-1 flex-shrink-0">
                                 {message.role === 'assistant' ? <Bot className="w-6 h-6 text-accent" /> : <User className="w-6 h-6" />}
                             </div>
-                            <div className={`p-3 rounded-lg max-w-xl text-sm whitespace-pre-wrap ${message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                            <div className={`p-3 rounded-lg max-w-xl text-sm ${message.role === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
                                 {isLoading && message.role === 'assistant' && !message.content ? (
                                     <div className="flex items-center gap-2 text-muted-foreground">
                                         <Loader2 className="w-4 h-4 animate-spin" />
                                         <span>Thinking...</span>
                                     </div>
-                                ) : message.content }
+                                ) : (
+                                    <div className="prose prose-sm dark:prose-invert max-w-none whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: message.content.replace(/```(python|)\n/g, '<pre><code class="language-python">').replace(/```/g, '</code></pre>') || '' }}/>
+                                 )}
                                 {isLoading && message.role === 'assistant' && index === messages.length - 1 && message.content ? <span className="inline-block w-2 h-4 ml-1 translate-y-1 bg-foreground animate-pulse" /> : null}
                             </div>
                             {message.role === 'assistant' && message.content && (
