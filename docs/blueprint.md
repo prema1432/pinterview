@@ -6,7 +6,7 @@
 - Screen Customization: Customize the application's screen overlay during the interview.
 - Auto Answer Display: Uses a tool to provide real-time answers to interview questions. Display AI-generated responses directly on the screen during the interview.
 - Overlay Design: Clear layout for question presentation and AI answer overlays, ensuring readability without obstructing the video feed.
-- Interview Question Generator: Generate practice interview questions for the user to prepare with, with a focus on question styles that match the selected role and/or company.
+- Interview Question Generator: Generate practice interview questions for the user to prepare with, with a focus on  question styles that match the selected role and/or company.
 - Simple Controls: Simple controls to start/stop masking, toggle the on-screen answer display, and initiate the question generation.
 
 ## Style Guidelines:
