@@ -1,11 +1,12 @@
 "use client";
 
-import { Bot, Lightbulb, MessageSquare, Monitor } from "lucide-react";
+import { Bot, Lightbulb, MessageSquare, Monitor, FileText } from "lucide-react";
 import { AutoAnswer } from "./auto-answer";
 import { QuestionGenerator } from "./question-generator";
 import { ScreenAnalyzer } from "./screen-analyzer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InstallPwaButton } from "./install-pwa-button";
+import { ResumeOptimizer } from "./resume-optimizer";
 
 export default function InterviewAce() {
   return (
@@ -24,7 +25,7 @@ export default function InterviewAce() {
       </header>
       <main className="flex-1 p-4 md:p-8">
         <Tabs defaultValue="copilot" className="w-full max-w-screen-xl mx-auto">
-          <TabsList className="grid w-full grid-cols-1 md:grid-cols-3">
+          <TabsList className="grid w-full grid-cols-1 md:grid-cols-4">
             <TabsTrigger value="copilot">
               <MessageSquare className="mr-2" />
               Copilot
@@ -36,6 +37,10 @@ export default function InterviewAce() {
             <TabsTrigger value="generator">
               <Lightbulb className="mr-2" />
               Question Generator
+            </TabsTrigger>
+            <TabsTrigger value="optimizer">
+              <FileText className="mr-2" />
+              Resume Optimizer
             </TabsTrigger>
           </TabsList>
           <TabsContent value="copilot" className="mt-6">
@@ -49,6 +54,11 @@ export default function InterviewAce() {
           <TabsContent value="generator" className="mt-6">
             <div className="max-w-3xl mx-auto">
                 <QuestionGenerator />
+            </div>
+          </TabsContent>
+          <TabsContent value="optimizer" className="mt-6">
+            <div className="max-w-3xl mx-auto">
+                <ResumeOptimizer />
             </div>
           </TabsContent>
         </Tabs>

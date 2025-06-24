@@ -21,3 +21,8 @@ export const CopilotInputSchema = z.object({
 });
 
 export type CopilotInput = z.infer<typeof CopilotInputSchema>;
+
+export const resumeOptimizerSchema = z.object({
+  resumeContent: z.string().min(1, { message: 'A resume must be selected or its content provided.' }),
+  jobDescription: z.string().min(20, { message: 'Job description must be at least 20 characters.' }),
+});
